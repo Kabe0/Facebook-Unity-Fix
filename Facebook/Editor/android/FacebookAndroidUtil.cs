@@ -57,7 +57,7 @@ namespace UnityEditor.FacebookEditor
 					}
 					
 					// Using the user defined keystore values instead of the debug one.
-					playerSettingsKeyHash = GetKeyHash( PlayerSettings.Android.keyaliasName, PlayerSettings.Android.keystoreName, PlayerSettings.Android.keyaliasPass, PlayerSettings.Android.keystorePass );
+					playerSettingsKeyHash = GetKeyHash( PlayerSettings.Android.keyaliasName, keyStorePath, PlayerSettings.Android.keyaliasPass, PlayerSettings.Android.keystorePass );
 					//debugKeyHash = GetKeyHash("androiddebugkey", DebugKeyStorePath, "android");
 				}
 				//return debugKeyHash;
@@ -76,6 +76,17 @@ namespace UnityEditor.FacebookEditor
             }
         }*/
 		
+		private static string keyStorePath
+		{
+			//System.IO.Directory.GetCurrentDirectory() + "/ " 
+			get
+			{
+				return (Application.platform == RuntimePlatform.WindowsEditor) ? 
+					PlayerSettings.Android.keystoreName: 
+						PlayerSettings.Android.keystoreName.Replace( " ", "\\ " );
+			}
+		}
+		
 		private static string GetKeyHash( string alias, string keyStore, string keyPass, string storePass )
 		{
 			var proc = new Process();
@@ -92,6 +103,7 @@ namespace UnityEditor.FacebookEditor
 				proc.StartInfo.FileName = "bash";
 				arguments = @"-c " + arguments;
 			}
+
 			proc.StartInfo.Arguments = string.Format( arguments, storePass, keyPass, alias, keyStore );
 			proc.StartInfo.UseShellExecute = false;
 			proc.StartInfo.CreateNoWindow = true;
@@ -102,7 +114,6 @@ namespace UnityEditor.FacebookEditor
 			{
 				keyHash.Append( proc.StandardOutput.ReadToEnd() );
 			}
-			
 			switch ( proc.ExitCode )
 			{
 			case 255: setupError = ERROR_KEYTOOL_ERROR;
