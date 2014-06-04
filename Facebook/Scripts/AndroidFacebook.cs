@@ -140,6 +140,7 @@ namespace Facebook
 
         public void OnInitComplete(string message)
         {
+            this.isInitialized = true;
             OnLoginComplete(message);
             if (this.onInitComplete != null)
             {
@@ -174,6 +175,14 @@ namespace Facebook
             }
 
             OnAuthResponse(new FBResult(message));
+        }
+
+        public void OnGroupCreateComplete(string message)
+        {
+            var result = (Dictionary<string, object>)MiniJSON.Json.Deserialize(message);
+            var callbackId = (string)result[CallbackIdKey];
+            result.Remove(CallbackIdKey);
+            OnFacebookResponse(callbackId, new FBResult(MiniJSON.Json.Serialize(result)));
         }
 
         //TODO: move into AbstractFacebook
@@ -444,6 +453,40 @@ namespace Facebook
             FacebookDelegate callback = null)
         {
             throw new PlatformNotSupportedException("There is no Facebook Pay Dialog on Android");
+        }
+
+        public override void GameGroupCreate(
+            string name,
+            string description,
+            string privacy = "CLOSED",
+            FacebookDelegate callback = null)
+        {
+            var paramsDict = new Dictionary<string, object>();
+            paramsDict["name"] = name;
+            paramsDict["description"] = description;
+            paramsDict["privacy"] = privacy;
+
+            if (callback != null)
+            {
+                paramsDict["callback_id"] = AddFacebookDelegate(callback);
+            }
+
+            CallFB("GameGroupCreate", MiniJSON.Json.Serialize (paramsDict));
+        }
+
+        public override void GameGroupJoin(
+            string id,
+            FacebookDelegate callback = null)
+        {
+            var paramsDict = new Dictionary<string, object>();
+            paramsDict["id"] = id;
+
+            if (callback != null)
+            {
+                paramsDict["callback_id"] = AddFacebookDelegate(callback);
+            }
+
+            CallFB("GameGroupJoin", MiniJSON.Json.Serialize (paramsDict));
         }
 
         public override void GetDeepLink(FacebookDelegate callback)

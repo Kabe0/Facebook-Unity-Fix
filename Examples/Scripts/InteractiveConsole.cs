@@ -4,57 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public sealed class InteractiveConsole : MonoBehaviour
+public sealed class InteractiveConsole : ConsoleBase
 {
-    #region FB.Init() example
-
-    private bool isInit = false;
-
-    private void CallFBInit()
-    {
-        FB.Init(OnInitComplete, OnHideUnity);
-    }
-
-    private void OnInitComplete()
-    {
-        Debug.Log("FB.Init completed: Is user logged in? " + FB.IsLoggedIn);
-        isInit = true;
-    }
-
-    private void OnHideUnity(bool isGameShown)
-    {
-        Debug.Log("Is game showing? " + isGameShown);
-    }
-
-    #endregion
-
-    #region FB.Login() example
-
-    private void CallFBLogin()
-    {
-        FB.Login("email,publish_actions", LoginCallback);
-    }
-
-    void LoginCallback(FBResult result)
-    {
-        if (result.Error != null)
-            lastResponse = "Error Response:\n" + result.Error;
-        else if (!FB.IsLoggedIn)
-        {
-            lastResponse = "Login cancelled by Player";
-        }
-        else
-        {
-            lastResponse = "Login was successful!";
-        }
-    }
-
-    private void CallFBLogout()
-    {
-        FB.Logout();
-    }
-    #endregion
-
     #region FB.PublishInstall() example
 
     private void CallFBPublishInstall()
@@ -274,42 +225,9 @@ public sealed class InteractiveConsole : MonoBehaviour
 
     #region GUI
 
-    private string status = "Ready";
-
-    private string lastResponse = "";
-    public GUIStyle textStyle = new GUIStyle();
-    private Texture2D lastResponseTexture;
-
-    private Vector2 scrollPosition = Vector2.zero;
-#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8
-    int buttonHeight = 60;
-    int mainWindowWidth = Screen.width - 30;
-    int mainWindowFullWidth = Screen.width;
-#else
-    int buttonHeight = 24;
-    int mainWindowWidth = 500;
-    int mainWindowFullWidth = 530;
-#endif
-
-    private int TextWindowHeight
+    override protected void Awake()
     {
-        get
-        {
-#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8
-            return IsHorizontalLayout() ? Screen.height : 85;
-#else
-        return Screen.height;
-#endif
-        }
-    }
-
-    void Awake()
-    {
-        textStyle.alignment = TextAnchor.UpperLeft;
-        textStyle.wordWrap = true;
-        textStyle.padding = new RectOffset(10, 10, 10, 10);
-        textStyle.stretchHeight = true;
-        textStyle.stretchWidth = false;
+        base.Awake();
 
         FeedProperties.Add("key1", new[] { "valueString1" });
         FeedProperties.Add("key2", new[] { "valueString2", "http://www.facebook.com" });
@@ -317,49 +235,7 @@ public sealed class InteractiveConsole : MonoBehaviour
 
     void OnGUI()
     {
-        if (IsHorizontalLayout())
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
-        }
-        GUILayout.Space(5);
-        GUILayout.Box("Status: " + status, GUILayout.MinWidth(mainWindowWidth));
-
-#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
-        {
-            scrollPosition.y += Input.GetTouch(0).deltaPosition.y;
-        }
-#endif
-
-        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.MinWidth(mainWindowFullWidth));
-        GUILayout.BeginVertical();
-        GUI.enabled = !isInit;
-        if (Button("FB.Init"))
-        {
-            CallFBInit();
-            status = "FB.Init() called with " + FB.AppId;
-        }
-
-        GUILayout.BeginHorizontal();
-
-        GUI.enabled = isInit;
-        if (Button("Login"))
-        {
-            CallFBLogin();
-            status = "Login called";
-        }
-
-#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8
-        GUI.enabled = FB.IsLoggedIn;
-        if (Button("Logout"))
-        {
-            CallFBLogout();
-            status = "Logout called";
-        }
-        GUI.enabled = isInit;
-#endif
-        GUILayout.EndHorizontal();
+        AddCommonHeader ();
 
 #if UNITY_IOS || UNITY_ANDROID
         if (Button("Publish Install"))
@@ -501,30 +377,7 @@ public sealed class InteractiveConsole : MonoBehaviour
         }
         GUI.enabled = true;
 
-        var textAreaSize = GUILayoutUtility.GetRect(640, TextWindowHeight);
-
-        GUI.TextArea(
-            textAreaSize,
-            string.Format(
-                " AppId: {0} \n Facebook Dll: {1} \n UserId: {2}\n IsLoggedIn: {3}\n AccessToken: {4}\n AccessTokenExpiresAt: {5}\n {6}",
-                FB.AppId,
-                (isInit) ? "Loaded Successfully" : "Not Loaded",
-                FB.UserId,
-                FB.IsLoggedIn,
-                FB.AccessToken,
-                FB.AccessTokenExpiresAt,
-                lastResponse
-            ), textStyle);
-
-        if (lastResponseTexture != null)
-        {
-            var texHeight = textAreaSize.y + 200;
-            if (Screen.height - lastResponseTexture.height < texHeight)
-            {
-                texHeight = Screen.height - lastResponseTexture.height;
-            }
-            GUI.Label(new Rect(textAreaSize.x + 5, texHeight, lastResponseTexture.width, lastResponseTexture.height), lastResponseTexture);
-        }
+        AddCommonFooter();
 
         if (IsHorizontalLayout())
         {
@@ -532,20 +385,6 @@ public sealed class InteractiveConsole : MonoBehaviour
         }
     }
 
-    void Callback(FBResult result)
-    {
-        lastResponseTexture = null;
-        // Some platforms return the empty string instead of null.
-        if (!String.IsNullOrEmpty(result.Error))
-            lastResponse = "Error Response:\n" + result.Error;
-        else if (!ApiQuery.Contains("/picture"))
-            lastResponse = "Success Response:\n" + result.Text;
-        else
-        {
-            lastResponseTexture = result.Texture;
-            lastResponse = "Success Response:\n";
-        }
-    }
 
     private IEnumerator TakeScreenshot() 
     {
@@ -564,32 +403,6 @@ public sealed class InteractiveConsole : MonoBehaviour
         wwwForm.AddField("message", "herp derp.  I did a thing!  Did I do this right?");
 
         FB.API("me/photos", Facebook.HttpMethod.POST, Callback, wwwForm);
-    }
-
-    private bool Button(string label)
-    {
-        return GUILayout.Button(
-          label, 
-          GUILayout.MinHeight(buttonHeight), 
-          GUILayout.MaxWidth(mainWindowWidth)
-        );
-    }
-
-    private void LabelAndTextField(string label, ref string text)
-    {
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(label, GUILayout.MaxWidth(150));
-        text = GUILayout.TextField(text);
-        GUILayout.EndHorizontal();
-    }
-
-    private bool IsHorizontalLayout()
-    {
-#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8
-        return Screen.orientation == ScreenOrientation.Landscape;
-#else
-        return true;
-#endif
     }
 
     #endregion

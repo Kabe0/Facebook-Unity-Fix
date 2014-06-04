@@ -8,7 +8,7 @@ namespace Facebook
     {
         private const string CancelledResponse = "{\"cancelled\":true}";
 #if UNITY_IOS
-        [DllImport ("__Internal")] private static extern void iosInit(bool cookie, bool logging, bool status, bool frictionlessRequests, string urlSuffix);
+        [DllImport ("__Internal")] private static extern void iosInit(string appId, bool cookie, bool logging, bool status, bool frictionlessRequests, string urlSuffix);
         [DllImport ("__Internal")] private static extern void iosLogin(string scope);
         [DllImport ("__Internal")] private static extern void iosLogout();
 
@@ -43,6 +43,16 @@ namespace Facebook
             int maxRecipients = 0, 
             string data = "", 
             string title = "");
+
+        [DllImport ("__Internal")] 
+        private static extern void iosCreateGameGroup(
+            int requestId,
+            string name,
+            string description,
+            string privacy);
+
+        [DllImport ("__Internal")] 
+        private static extern void iosJoinGameGroup(int requestId, string id);
         
         [DllImport ("__Internal")] 
         private static extern void iosFBSettingsPublishInstall(int requestId, string appId);
@@ -69,7 +79,7 @@ namespace Facebook
         [DllImport ("__Internal")] 
         private static extern void iosGetDeepLink();
 #else
-        void iosInit(bool cookie, bool logging, bool status, bool frictionlessRequests, string urlSuffix) { }
+        void iosInit(string appId, bool cookie, bool logging, bool status, bool frictionlessRequests, string urlSuffix) { }
         void iosLogin(string scope) { }
         void iosLogout() { }
 
@@ -102,6 +112,14 @@ namespace Facebook
             int maxRecipients = 0,
             string data = "",
             string title = "") { }
+
+        void iosCreateGameGroup(
+            int requestId,
+            string name,
+            string description,
+            string privacy) { }
+
+        void iosJoinGameGroup(int requestId, string id) {}
 
         void iosFBSettingsPublishInstall(int requestId, string appId) { }
 
@@ -187,7 +205,7 @@ namespace Facebook
             bool frictionlessRequests = false,
             Facebook.HideUnityDelegate hideUnityDelegate = null)
         {
-            iosInit(cookie, logging, status, frictionlessRequests, FBSettings.IosURLSuffix);
+            iosInit(appId, cookie, logging, status, frictionlessRequests, FBSettings.IosURLSuffix);
             externalInitDelegate = onInitComplete;
         }
         #endregion
@@ -277,6 +295,22 @@ namespace Facebook
             FacebookDelegate callback = null)
         {
             throw new PlatformNotSupportedException("There is no Facebook Pay Dialog on iOS");
+        }
+
+        public override void GameGroupCreate(
+            string name,
+            string description,
+            string privacy = "CLOSED",
+            FacebookDelegate callback = null)
+        {
+            iosCreateGameGroup(System.Convert.ToInt32(AddFacebookDelegate(callback)), name, description, privacy);
+        }
+
+        public override void GameGroupJoin(
+            string id,
+            FacebookDelegate callback = null)
+        {
+            iosJoinGameGroup(System.Convert.ToInt32(AddFacebookDelegate(callback)), id);
         }
 
         public override void GetDeepLink(FacebookDelegate callback)
@@ -376,6 +410,7 @@ namespace Facebook
 
         private void OnInitComplete(string msg)
         {
+            this.isInitialized = true;
             if (!string.IsNullOrEmpty(msg))
             {
                 OnLogin(msg);

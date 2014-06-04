@@ -148,9 +148,9 @@ public class FacebookSettingsEditor : Editor
                         msg = "You don't have the Android SDK setup!  Go to " + (Application.platform == RuntimePlatform.OSXEditor ? "Unity" : "Edit") + "->Preferences... and set your Android SDK Location under External Tools";
                         break;
                     case FacebookAndroidUtil.ERROR_NO_KEYSTORE:
-                       // msg = "Your android debug keystore file is missing! You can create new one by creating and building empty Android project in Ecplise.";
+						// msg = "Your android debug keystore file is missing! You can create new one by creating and building empty Android project in Ecplise.";
 						msg = "Your keystore file is missing! You can create one by going into Unity's Build Settings->Android->Publish Settings.";
-						break;
+                        break;
                     case FacebookAndroidUtil.ERROR_NO_KEYTOOL:
                         msg = "Keytool not found. Make sure that Java is installed, and that Java tools are in your path.";
                         break;
@@ -168,7 +168,7 @@ public class FacebookSettingsEditor : Editor
             SelectableLabelField(classNameLabel, ManifestMod.DeepLinkingActivityName);
             SelectableLabelField(debugAndroidKeyLabel, FacebookAndroidUtil.DebugKeyHash);
 
-			if ( GUILayout.Button("Refresh Keyhash"))
+			if ( GUILayout.Button( "Refresh Keyhash" ) )
 			{
 				FacebookAndroidUtil.refresh();
 			}

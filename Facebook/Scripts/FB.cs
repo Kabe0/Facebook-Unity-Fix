@@ -71,6 +71,14 @@ public sealed class FB : ScriptableObject
         }
     }
 
+    public static bool IsInitialized
+    {
+        get 
+        {
+            return (facebook != null) && facebook.IsInitialized;
+        }
+    }
+
     #region Init
     /**
      * This is the preferred way to call FB.Init().  It will take the facebook app id specified in your
@@ -261,6 +269,22 @@ public sealed class FB : ScriptableObject
     public static void GetDeepLink(FacebookDelegate callback)
     {
         FacebookImpl.GetDeepLink(callback);
+    }
+
+    public static void GameGroupCreate(
+        string name,
+        string description,
+        string privacy = "CLOSED",
+        FacebookDelegate callback = null)
+    {
+        FacebookImpl.GameGroupCreate(name, description, privacy, callback);
+    }
+
+    public static void GameGroupJoin(
+        string id,
+        FacebookDelegate callback = null)
+    {
+        FacebookImpl.GameGroupJoin(id, callback);
     }
 
     #region App Events

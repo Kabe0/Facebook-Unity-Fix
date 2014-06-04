@@ -44,7 +44,7 @@ namespace UnityEditor.FacebookEditor
             return false;
         }
         
-        public static void UpdatePlist(string path, string appId)
+        public static void UpdatePlist(string path, string appId, string[] allPossibleAppIds)
         {
             const string fileName = "Info.plist";
             string fullPath = Path.Combine(path, fileName);
@@ -99,7 +99,10 @@ namespace UnityEditor.FacebookEditor
                         AddChildElement(doc, urlSchemeDict, "key", "CFBundleURLSchemes");
                         var innerArray = AddChildElement(doc, urlSchemeDict, "array");
                         {
-                            AddChildElement(doc, innerArray, "string", "fb" + appId);
+                            foreach(string currAppId in allPossibleAppIds)
+                            {
+                                AddChildElement(doc, innerArray, "string", "fb" + currAppId);
+                            }
                         }
                     }
                 }
