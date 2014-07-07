@@ -12,6 +12,7 @@ Adding the fix so that facebook GUI displays the key that it actually uses on th
 To use either zip, clone, or grab the FacebookSDK5.2.1-Fix.unitypackage file and extract into the assets folder in your unity project.
 
 Once it's setup, go into your publish settings for android, and create a keystore file with a debug or release key.
+*Make sure you define the keystore password and alias passwords otherwise the "Debug Android Key Hash" will be incorrect.*
 Now go into the Facebook Settings (located in the top menu) and press the refresh button in the inspector. You should see the correct key appear in the "Debug Android Key Hash".
 
 ##Code Modifications From base Facebook SDK 5.2.1##
