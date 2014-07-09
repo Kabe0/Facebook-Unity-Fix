@@ -30,7 +30,7 @@ Now go into the Facebook Settings (located in the top menu) and press the refres
 - Updated class AndroidUtilsGUI() to now display the message "Your keystore file is missing! You can create one by going into Unity's Build Settings->Android->Publish Settings." whenever the keystore file is missing.
 - Added a refresh button that calls the FacebookAndroidUtils refresh method.
 
-Hope these changes help anyone that's using the Facebook SDK for Unit3d!
+Hope these changes help anyone that's using the Facebook SDK for Unity3d!
 
 
 NOTE: This project is not owned by me in any way. I have just put up a small fix to allow developers easy access to the real keystore value.
