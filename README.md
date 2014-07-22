@@ -4,6 +4,8 @@ Facebook-Unity-Fix - Now Updated for version 5.2.1
 ##Update##
 For people experiencing problems with facebook CanvasFacebook.dll. It appears that version 5.2.1 they broke the canvas feature. So if your using facebook for web you will run into problems with this sdk. The solution for now is to copy over the files *FacebookAndroidUtils.cs* and *FacebookSettingsEditor.cs* into the Facebook Unity SDK 5.1 SDK if you are wanting to use this fix with the web version of facebook. I will either revert it in the coming months or (hopefully) update it to the latest release when they provide the next release of the Facebook Unity SDK.
 
+
+##Description##
 The Facebook SDK makes the assumtion that the keystore file you are going to use is the .android/debug.keystore file when in reality unity uses the keystore the user selects in the *Publish Settings* under android. I have gone through and edited two of the SDK Files in order to provide easy functionality to allow users to quickly get the actual keystore value that facebook uses when published to an Android phone. Now you get a real message that asks you to setup your keystore file in the android publish menu under your build settings, and I have created a refresh button that allows you to check your keystore value in the Facebook Settings GUI.
 
 This is a copy of the Facebook Unity SDK 5.2.1 which you can get the original source here.
