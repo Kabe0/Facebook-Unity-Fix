@@ -68,8 +68,6 @@ namespace Facebook
                 yield return null;
             }
             fb.Init(onInitComplete, appId, cookie, logging, status, xfbml, channelUrl, authResponse, frictionlessRequests, hideUnityDelegate);
-
-            this.isInitialized = true;
             if (onInitComplete != null)
             {
                 onInitComplete();
@@ -141,22 +139,6 @@ namespace Facebook
             FacebookDelegate callback = null)
         {
             FbDebug.Info("Pay method only works with Facebook Canvas.  Does nothing in the Unity Editor, iOS or Android");
-        }
-
-        public override void GameGroupCreate(
-            string name,
-            string description,
-            string privacy = "CLOSED",
-            FacebookDelegate callback = null)
-        {
-            throw new PlatformNotSupportedException("There is no Facebook GameGroupCreate Dialog on Editor");
-        }
-
-        public override void GameGroupJoin(
-            string id,
-            FacebookDelegate callback = null)
-        {
-            throw new PlatformNotSupportedException("There is no Facebook GameGroupJoin Dialog on Editor");
         }
 
         public override void GetAuthResponse(FacebookDelegate callback = null)

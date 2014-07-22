@@ -34,7 +34,7 @@ namespace UnityEditor.FacebookEditor
                 }
                 project.Save();
 
-                PlistMod.UpdatePlist(path, FBSettings.AppId, FBSettings.AllAppIds);
+                PlistMod.UpdatePlist(path, FBSettings.AppId);
                 FixupFiles.FixSimulator(path);
                 FixupFiles.AddVersionDefine(path);
                 FixupFiles.FixColdStart(path);

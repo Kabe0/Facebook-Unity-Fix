@@ -160,14 +160,6 @@ public class FBSettings : ScriptableObject
         }
     }
 
-    public static string[] AllAppIds
-    {
-        get
-        {
-            return Instance.AppIds;
-        }
-    }
-
     public static string AppId
     {
         get
