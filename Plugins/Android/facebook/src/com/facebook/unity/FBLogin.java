@@ -36,7 +36,7 @@ public class FBLogin {
 
         final UnityMessage unityMessage = new UnityMessage("OnInitComplete");
         unityMessage.put("key_hash", FB.getKeyHash());
-        
+
         // if there is an existing session, reopen it
         if (SessionState.CREATED_TOKEN_LOADED.equals(session.getState())) {
             Session.StatusCallback finalCallback = getFinalCallback(unityMessage, null);
@@ -94,7 +94,7 @@ public class FBLogin {
             Session.StatusCallback afterReadPermissionCallback = getAfterReadPermissionLoginCallback(unityMessage, publishPermissions, activity);
             sessionOpenRequest(session, afterReadPermissionCallback, activity, readPermissions, false);
         } else {
-            Session.StatusCallback finalCallback = getFinalCallback(unityMessage, activity); 
+            Session.StatusCallback finalCallback = getFinalCallback(unityMessage, activity);
             sessionOpenRequest(session, finalCallback, activity, permissions, hasPublishPermissions);
         }
     }
@@ -117,7 +117,7 @@ public class FBLogin {
         }
     }
 
-    private static Session.StatusCallback getAfterReadPermissionLoginCallback(final UnityMessage unityMessage, final List<String> publishPermisions, final Activity activity) {
+    private static Session.StatusCallback getAfterReadPermissionLoginCallback(final UnityMessage unityMessage, final List<String> publishPermissions, final Activity activity) {
         return new Session.StatusCallback() {
             // callback when session changes state
             @Override
@@ -143,9 +143,13 @@ public class FBLogin {
                     return;
                 }
 
-                //ask for publish permissions
-                Session.StatusCallback finalCallback = getFinalCallback(unityMessage, activity);
-                sessionOpenRequest(session, finalCallback, activity, publishPermisions, true);
+                //ask for publish permissions, if necessary.
+                if(session.getPermissions().containsAll(publishPermissions)) {
+                    finalizeLogin(session, state, exception, unityMessage, activity);
+                } else {
+                    Session.StatusCallback finalCallback = getFinalCallback(unityMessage, activity);
+                    sessionOpenRequest(session, finalCallback, activity, publishPermissions, true);
+                }
             }
         };
     }
@@ -160,56 +164,60 @@ public class FBLogin {
                 }
                 session.removeCallback(this);
 
-                if (activityToClose != null) {
-                    activityToClose.finish();
-                }
-
-                if (!session.isOpened() && state != SessionState.CLOSED_LOGIN_FAILED) {
-                    unityMessage.sendError("Unknown error while opening session. Check logcat for details.");
-                    return;
-                }
-
-                if (session.isOpened()) {
-                    unityMessage.put("opened", true);
-                } else if (state == SessionState.CLOSED_LOGIN_FAILED) {
-                    unityMessage.putCancelled();
-                }
-
-                if (session.getAccessToken() == null || session.getAccessToken().equals("")) {
-                    unityMessage.send();
-                    return;
-                }
-
-                // there's a chance a subset of the permissions were allowed even if the login was cancelled
-                // if the access token is there, try to get it anyways
-
-                // add a callback to update the access token when it changes
-                session.addCallback(new StatusCallback(){
-                    @Override
-                    public void call(Session session,
-                                     SessionState state, Exception exception) {
-                        if (session == null || session.getAccessToken() == null) {
-                            return;
-                        }
-                        final UnityMessage unityMessage = new UnityMessage("OnAccessTokenUpdate");
-                        unityMessage.put("access_token", session.getAccessToken());
-                        unityMessage.put("expiration_timestamp", "" + session.getExpirationDate().getTime() / 1000);
-                        unityMessage.send();
-                    }
-                });
-                unityMessage.put("access_token", session.getAccessToken());
-                unityMessage.put("expiration_timestamp", "" + session.getExpirationDate().getTime() / 1000);
-                Request.newMeRequest(session, new Request.GraphUserCallback() {
-                    @Override
-                    public void onCompleted(GraphUser user, Response response) {
-                        if (user != null) {
-                            unityMessage.put("user_id", user.getId());
-                        }
-                        unityMessage.send();
-                    }
-                }).executeAsync();
+                finalizeLogin(session, state, exception, unityMessage, activityToClose);
             }
         };
+    }
+
+    private static void finalizeLogin(Session session, SessionState state, Exception exception, final UnityMessage unityMessage, final Activity activityToClose) {
+        if (activityToClose != null) {
+            activityToClose.finish();
+        }
+
+        if (!session.isOpened() && state != SessionState.CLOSED_LOGIN_FAILED) {
+            unityMessage.sendError("Unknown error while opening session. Check logcat for details.");
+            return;
+        }
+
+        if (session.isOpened()) {
+            unityMessage.put("opened", true);
+        } else if (state == SessionState.CLOSED_LOGIN_FAILED) {
+            unityMessage.putCancelled();
+        }
+
+        if (session.getAccessToken() == null || session.getAccessToken().equals("")) {
+            unityMessage.send();
+            return;
+        }
+
+        // there's a chance a subset of the permissions were allowed even if the login was cancelled
+        // if the access token is there, try to get it anyways
+
+        // add a callback to update the access token when it changes
+        session.addCallback(new StatusCallback(){
+            @Override
+            public void call(Session session,
+               SessionState state, Exception exception) {
+                if (session == null || session.getAccessToken() == null) {
+                    return;
+                }
+                final UnityMessage unityMessage = new UnityMessage("OnAccessTokenUpdate");
+                unityMessage.put("access_token", session.getAccessToken());
+                unityMessage.put("expiration_timestamp", "" + session.getExpirationDate().getTime() / 1000);
+                unityMessage.send();
+            }
+        });
+        unityMessage.put("access_token", session.getAccessToken());
+        unityMessage.put("expiration_timestamp", "" + session.getExpirationDate().getTime() / 1000);
+        Request.newMeRequest(session, new Request.GraphUserCallback() {
+            @Override
+            public void onCompleted(GraphUser user, Response response) {
+                if (user != null) {
+                    unityMessage.put("user_id", user.getId());
+                }
+                unityMessage.send();
+            }
+        }).executeAsync();
     }
 
     private static OpenRequest getOpenRequest(StatusCallback callback, List<String> permissions, Activity activity) {

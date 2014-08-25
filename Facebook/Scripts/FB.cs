@@ -31,14 +31,14 @@ public sealed class FB : ScriptableObject
         }
     }
 
-    public static string AppId 
+    public static string AppId
     {
-        get 
+        get
         {
             // appId might be different from FBSettings.AppId
             // if using the programmatic version of FB.Init()
             return appId;
-        } 
+        }
     }
     public static string UserId
     {
@@ -68,6 +68,14 @@ public sealed class FB : ScriptableObject
         get
         {
             return (facebook != null) && facebook.IsLoggedIn;
+        }
+    }
+
+    public static bool IsInitialized
+    {
+        get
+        {
+            return (facebook != null) && facebook.IsInitialized;
         }
     }
 
@@ -203,7 +211,7 @@ public sealed class FB : ScriptableObject
             string message,
             OGActionType actionType,
             string objectId,
-            string filters = "",
+            List<object> filters = null,
             string[] excludeIds = null,
             int? maxRecipients = null,
             string data = "",
@@ -216,7 +224,7 @@ public sealed class FB : ScriptableObject
     public static void AppRequest(
             string message,
             string[] to = null,
-            string filters = "",
+            List<object> filters = null,
             string[] excludeIds = null,
             int? maxRecipients = null,
             string data = "",
@@ -253,14 +261,36 @@ public sealed class FB : ScriptableObject
         FacebookImpl.API(query, method, formData, callback);
     }
 
+    [Obsolete("use FB.ActivateApp()")]
     public static void PublishInstall(FacebookDelegate callback = null)
     {
         FacebookImpl.PublishInstall(AppId, callback);
     }
 
+    public static void ActivateApp()
+    {
+        FacebookImpl.ActivateApp(AppId);
+    }
+
     public static void GetDeepLink(FacebookDelegate callback)
     {
         FacebookImpl.GetDeepLink(callback);
+    }
+
+    public static void GameGroupCreate(
+        string name,
+        string description,
+        string privacy = "CLOSED",
+        FacebookDelegate callback = null)
+    {
+        FacebookImpl.GameGroupCreate(name, description, privacy, callback);
+    }
+
+    public static void GameGroupJoin(
+        string id,
+        FacebookDelegate callback = null)
+    {
+        FacebookImpl.GameGroupJoin(id, callback);
     }
 
     #region App Events
