@@ -1,25 +1,25 @@
-Facebook-Unity-Fix - Reverted to version 5.1
+Facebook-Unity-Fix - Reverted to version 6.0
 ==================
 
 ##Update##
-For people experiencing problems with facebook CanvasFacebook.dll. It appears that version 5.2.1 they broke the canvas feature. I have reverted the sdk while keeping the changes to the keyhash file.
+Now updated to version 6.0 from 5.1. The 5.1 package is still avaiable for people who would prefer being on the older version of the Facebook Unity SDK.
 
 ##Description##
 The Facebook SDK makes the assumtion that the keystore file you are going to use is the .android/debug.keystore file when in reality unity uses the keystore the user selects in the *Publish Settings* under android. I have gone through and edited two of the SDK Files in order to provide easy functionality to allow users to quickly get the actual keystore value that facebook uses when published to an Android phone. Now you get a real message that asks you to setup your keystore file in the android publish menu under your build settings, and I have created a refresh button that allows you to check your keystore value in the Facebook Settings GUI.
 
-This is a copy of the Facebook Unity SDK 5.1 which you can get the original source here.
+This is a copy of the Facebook Unity SDK 6.0 which you can get the original source here.
 https://developers.facebook.com/docs/unity/downloads/?campaign_id=282184128580929&placement=SDK_list
 
 Adding the fix so that facebook GUI displays the key that it actually uses on the Android device instead of the default .android\debug.keystore file. Changes are as follows...
 
 ##Instructions##
-To use either zip, clone, or grab the FacebookSDK5.2.1-Fix.unitypackage file and extract into the assets folder in your unity project.
+To use either zip, clone, or grab the FacebookSDK5.6.0-Fix.unitypackage file and extract into the assets folder in your unity project.
 
 Once it's setup, go into your publish settings for android, and create a keystore file with a debug or release key.
 *Make sure you define the keystore password and alias passwords otherwise the "Debug Android Key Hash" will be incorrect.*
 Now go into the Facebook Settings (located in the top menu) and press the refresh button in the inspector. You should see the correct key appear in the "Debug Android Key Hash".
 
-##Code Modifications From base Facebook SDK 5.1##
+##Code Modifications From base Facebook SDK 6.0##
 
 ####Changes for FacebookAndroidUtils.cs####
 - Removed static string debugKeyHash (not always debug key)
