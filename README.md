@@ -1,4 +1,4 @@
-Facebook-Unity-Fix - Reverted to version 6.0
+Facebook-Unity-Fix - Now Version 6.0
 ==================
 
 ##Update##
