@@ -17,6 +17,8 @@
 package com.facebook.internal;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -25,7 +27,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
-import com.facebook.*;
+import com.facebook.FacebookException;
+import com.facebook.Request;
+import com.facebook.Settings;
 import com.facebook.android.BuildConfig;
 import com.facebook.model.GraphObject;
 import org.json.JSONArray;
@@ -57,6 +61,7 @@ public final class Utility {
     private static final String SUPPORTS_IMPLICIT_SDK_LOGGING = "supports_implicit_sdk_logging";
     private static final String NUX_CONTENT = "gdpv4_nux_content";
     private static final String NUX_ENABLED = "gdpv4_nux_enabled";
+    private static final String EXTRA_APP_EVENTS_INFO_FORMAT_VERSION = "a1";
 
     private static final String [] APP_SETTING_FIELDS = new String[] {
             SUPPORTS_ATTRIBUTION,
@@ -72,7 +77,7 @@ public final class Utility {
     private static Map<String, FetchedAppSettings> fetchedAppSettings =
             new ConcurrentHashMap<String, FetchedAppSettings>();
 
-    public static class FetchedAppSettings {
+  public static class FetchedAppSettings {
         private boolean supportsAttribution;
         private boolean supportsImplicitLogging;
         private String nuxContent;
@@ -347,13 +352,13 @@ public final class Utility {
     }
 
     public static void logd(String tag, Exception e) {
-        if (BuildConfig.DEBUG && tag != null && e != null) {
+        if (Settings.isLoggingEnabled() && tag != null && e != null) {
             Log.d(tag, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     public static void logd(String tag, String msg) {
-        if (BuildConfig.DEBUG && tag != null && msg != null) {
+        if (Settings.isLoggingEnabled() && tag != null && msg != null) {
             Log.d(tag, msg);
         }
     }
@@ -472,6 +477,31 @@ public final class Utility {
         params.setProperty("application_tracking_enabled", !limitEventUsage);
     }
 
+    public static void setAppEventExtendedDeviceInfoParameters(GraphObject params, Context appContext) {
+      JSONArray extraInfoArray = new JSONArray();
+      extraInfoArray.put(EXTRA_APP_EVENTS_INFO_FORMAT_VERSION);
+
+      // Application Manifest info:
+      String pkgName = appContext.getPackageName();
+      int versionCode = -1;
+      String versionName = "";
+
+      try {
+        PackageInfo pi = appContext.getPackageManager().getPackageInfo(pkgName, 0);
+        versionCode = pi.versionCode;
+        versionName = pi.versionName;
+      } catch (PackageManager.NameNotFoundException e) {
+        // Swallow
+      }
+
+      // Application Manifest info:
+      extraInfoArray.put(pkgName);
+      extraInfoArray.put(versionCode);
+      extraInfoArray.put(versionName);
+
+      params.setProperty("extinfo", extraInfoArray.toString());
+    }
+
     public static Method getMethodQuietly(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         try {
             return clazz.getMethod(methodName, parameterTypes);
@@ -498,4 +528,17 @@ public final class Utility {
             return null;
         }
     }
+
+  /**
+   * Returns the name of the current activity if the context is an activity, otherwise return "unknown"
+   */
+  public static String getActivityName(Context context) {
+    if (context == null) {
+      return "null";
+    } else if (context == context.getApplicationContext()) {
+      return "unknown";
+    } else {
+      return context.getClass().getSimpleName();
+    }
+  }
 }

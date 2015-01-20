@@ -20,7 +20,11 @@ public sealed class InteractiveConsole : ConsoleBase
 
     public string FriendSelectorTitle = "";
     public string FriendSelectorMessage = "Derp";
-    public string FriendSelectorFilters = "[\"app_users\"]";
+    private string[] FriendFilterTypes = new string[] { "None (default)", "app_users", "app_non_users" };
+    private int FriendFilterSelection = 0;
+    private List<string> FriendFilterGroupNames = new List<string>();
+    private List<string> FriendFilterGroupIDs = new List<string>();
+    private int NumFriendFilterGroups = 0;
     public string FriendSelectorData = "{}";
     public string FriendSelectorExcludeIds = "";
     public string FriendSelectorMax = "";
@@ -43,23 +47,30 @@ public sealed class InteractiveConsole : ConsoleBase
 
         // include the exclude ids
         string[] excludeIds = (FriendSelectorExcludeIds == "") ? null : FriendSelectorExcludeIds.Split(',');
-        List<object> FriendSelectorFiltersArr = null;
-        if (!String.IsNullOrEmpty(FriendSelectorFilters))
+
+        // Filter groups
+        List<object> FriendSelectorFilters = new List<object>();
+        if (FriendFilterSelection > 0)
         {
-            try
+            FriendSelectorFilters.Add(FriendFilterTypes[FriendFilterSelection]);
+        }
+        if (NumFriendFilterGroups > 0)
+        {
+            for (int i = 0; i < NumFriendFilterGroups; i++)
             {
-                FriendSelectorFiltersArr = Facebook.MiniJSON.Json.Deserialize(FriendSelectorFilters) as List<object>;
-            }
-            catch
-            {
-                throw new Exception("JSON Parse error");
+                FriendSelectorFilters.Add(
+                    new FBAppRequestsFilterGroup(
+                        FriendFilterGroupNames[i],
+                        FriendFilterGroupIDs[i].Split(',').ToList()
+                    )
+                );
             }
         }
 
         FB.AppRequest(
             FriendSelectorMessage,
             null,
-            FriendSelectorFiltersArr,
+            (FriendSelectorFilters.Count > 0) ? FriendSelectorFilters : null,
             excludeIds,
             maxRecipients,
             FriendSelectorData,
@@ -168,14 +179,21 @@ public sealed class InteractiveConsole : ConsoleBase
 
     #region FB.AppEvent.LogEvent example
 
-    public float PlayerLevel = 1.0f;
-
     public void CallAppEventLogEvent()
     {
-        var parameters = new Dictionary<string, object>();
-        parameters[Facebook.FBAppEventParameterName.Level] = "Player Level";
-        FB.AppEvents.LogEvent(Facebook.FBAppEventName.AchievedLevel, PlayerLevel, parameters);
-        PlayerLevel++;
+        FB.AppEvents.LogEvent(
+            Facebook.FBAppEventName.UnlockedAchievement,
+            null,
+            new Dictionary<string,object>() {
+                { Facebook.FBAppEventParameterName.Description, "Clicked 'Log AppEvent' button" }
+            }
+        );
+        Callback(new FBResult(
+                "You may see results showing up at https://www.facebook.com/insights/" +
+                FB.AppId +
+                "?section=AppEvents"
+            )
+        );
     }
 
     #endregion
@@ -241,24 +259,75 @@ public sealed class InteractiveConsole : ConsoleBase
         FeedProperties.Add("key2", new[] { "valueString2", "http://www.facebook.com" });
     }
 
+    private void FriendFilterArea() {
+#if UNITY_WEBPLAYER
+        GUILayout.BeginHorizontal();
+#endif
+        GUILayout.Label("Filters:");
+        FriendFilterSelection =
+            GUILayout.SelectionGrid(FriendFilterSelection,
+                                    FriendFilterTypes,
+                                    3,
+                                    GUILayout.MinHeight(buttonHeight));
+#if UNITY_WEBPLAYER
+        GUILayout.EndHorizontal();
+
+        // Filter groups are not supported on mobile so no need to display
+        // these buttons if not in web player.
+        if (NumFriendFilterGroups > 0)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Filter group name:", GUILayout.MaxWidth(150));
+            GUILayout.Label("IDs (comma separated):");
+            GUILayout.EndHorizontal();
+
+            int deleteGroup = -1;
+            for (int i = 0; i < FriendFilterGroupNames.Count(); i++)
+            {
+                GUILayout.BeginHorizontal();
+                FriendFilterGroupNames[i] = GUILayout.TextField(FriendFilterGroupNames[i], GUILayout.MaxWidth(150));
+                FriendFilterGroupIDs[i] = GUILayout.TextField(FriendFilterGroupIDs[i]);
+                if (GUILayout.Button("del", GUILayout.ExpandWidth(false)))
+                {
+                    deleteGroup = i;
+                }
+                GUILayout.EndHorizontal();
+            }
+            if (deleteGroup >= 0)
+            {
+                NumFriendFilterGroups--;
+                FriendFilterGroupNames.RemoveAt(deleteGroup);
+                FriendFilterGroupIDs.RemoveAt(deleteGroup);
+            }
+            GUILayout.EndVertical();
+        }
+
+        if (Button("Add filter group..."))
+        {
+            FriendFilterGroupNames.Add("");
+            FriendFilterGroupIDs.Add("");
+            NumFriendFilterGroups++;
+        }
+#endif
+    }
+
     void OnGUI()
     {
         AddCommonHeader ();
 
-#if UNITY_IOS || UNITY_ANDROID
         if (Button("Publish Install"))
         {
             CallFBActivateApp();
             status = "Install Published";
         }
-#endif
 
         GUI.enabled = FB.IsLoggedIn;
         GUILayout.Space(10);
         LabelAndTextField("Title (optional): ", ref FriendSelectorTitle);
         LabelAndTextField("Message: ", ref FriendSelectorMessage);
         LabelAndTextField("Exclude Ids (optional): ", ref FriendSelectorExcludeIds);
-        LabelAndTextField("Filters (optional): ", ref FriendSelectorFilters);
+        FriendFilterArea();
         LabelAndTextField("Max Recipients (optional): ", ref FriendSelectorMax);
         LabelAndTextField("Data (optional): ", ref FriendSelectorData);
         if (Button("Open Friend Selector"))
@@ -345,15 +414,16 @@ public sealed class InteractiveConsole : ConsoleBase
         {
             CallFBGetDeepLink();
         }
-#if UNITY_IOS || UNITY_ANDROID
+
+        GUI.enabled = true;
         if (Button("Log FB App Event"))
         {
             status = "Logged FB.AppEvent";
             CallAppEventLogEvent();
         }
-#endif
 
 #if UNITY_WEBPLAYER
+        GUI.enabled = FB.IsInitialized;
         GUILayout.Space(10);
 
         LabelAndTextField("Game Width: ", ref Width);
@@ -372,6 +442,7 @@ public sealed class InteractiveConsole : ConsoleBase
             status = "Set to new Resolution";
             CallCanvasSetResolution();
         }
+        GUI.enabled = true;
 #endif
 
         GUILayout.Space(10);
@@ -383,7 +454,6 @@ public sealed class InteractiveConsole : ConsoleBase
         {
             GUILayout.EndVertical();
         }
-        GUI.enabled = true;
 
         AddCommonFooter();
 

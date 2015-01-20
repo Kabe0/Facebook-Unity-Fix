@@ -37,7 +37,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import com.facebook.*;
-import com.facebook.android.*;
+import com.facebook.android.R;
+import com.facebook.android.Util;
 import com.facebook.internal.Logger;
 import com.facebook.internal.ServerProtocol;
 import com.facebook.internal.Utility;
@@ -51,7 +52,6 @@ import com.facebook.internal.Validate;
 public class WebDialog extends Dialog {
     private static final String LOG_TAG = Logger.LOG_TAG_BASE + "WebDialog";
     private static final String DISPLAY_TOUCH = "touch";
-    private static final String USER_AGENT = "user_agent";
     static final String REDIRECT_URI = "fbconnect://success";
     static final String CANCEL_URI = "fbconnect://cancel";
     static final boolean DISABLE_SSL_CHECK_FOR_TESTING = false;
@@ -700,7 +700,8 @@ public class WebDialog extends Dialog {
 
         /**
          * Sets the ID of the profile that the story will be published to. If not specified, it
-         * will default to the same profile that the story is being published from.
+         * will default to the same profile that the story is being published from. The ID must be a friend who also
+         * uses your app.
          *
          * @param id Facebook ID of the profile to post to
          * @return the builder

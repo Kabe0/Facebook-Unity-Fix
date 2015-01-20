@@ -37,7 +37,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class AuthorizationClient implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -72,10 +75,6 @@ class AuthorizationClient implements Serializable {
     static final String EVENT_EXTRAS_MISSING_INTERNET_PERMISSION = "no_internet_permission";
     static final String EVENT_EXTRAS_NOT_TRIED = "not_tried";
     static final String EVENT_EXTRAS_NEW_PERMISSIONS = "new_permissions";
-    static final String EVENT_EXTRAS_SERVICE_DISABLED = "service_disabled";
-    static final String EVENT_EXTRAS_APP_CALL_ID = "call_id";
-    static final String EVENT_EXTRAS_PROTOCOL_VERSION = "protocol_version";
-    static final String EVENT_EXTRAS_WRITE_PRIVACY = "write_privacy";
 
     List<AuthHandler> handlersToTry;
     AuthHandler currentHandler;
@@ -361,7 +360,8 @@ class AuthorizationClient implements Serializable {
         // request using the current token to get the permissions of the user.
 
         final ArrayList<String> fbids = new ArrayList<String>();
-        final ArrayList<String> tokenPermissions = new ArrayList<String>();
+        final ArrayList<String> grantedPermissions = new ArrayList<String>();
+        final ArrayList<String> declinedPermissions = new ArrayList<String>();
         final String newToken = pendingResult.token.getToken();
 
         Request.Callback meCallback = new Request.Callback() {
@@ -389,9 +389,10 @@ class AuthorizationClient implements Serializable {
             @Override
             public void onCompleted(Response response) {
                 try {
-                    List<String> permissions = Session.handlePermissionResponse(null, response);
-                    if (permissions != null) {
-                        tokenPermissions.addAll(permissions);
+                    Session.PermissionsPair permissionsPair = Session.handlePermissionResponse(response);
+                    if (permissionsPair != null) {
+                        grantedPermissions.addAll(permissionsPair.getGrantedPermissions());
+                        declinedPermissions.addAll(permissionsPair.getDeclinedPermissions());
                     }
                 } catch (Exception ex) {
                 }
@@ -411,7 +412,7 @@ class AuthorizationClient implements Serializable {
                         // Modify the token to have the right permission set.
                         AccessToken tokenWithPermissions = AccessToken
                                 .createFromTokenWithRefreshedPermissions(pendingResult.token,
-                                        tokenPermissions);
+                                        grantedPermissions, declinedPermissions);
                         result = Result.createTokenResult(pendingRequest, tokenWithPermissions);
                     } else {
                         result = Result
@@ -443,7 +444,7 @@ class AuthorizationClient implements Serializable {
     }
 
     private AppEventsLogger getAppEventsLogger() {
-        if (appEventsLogger == null || appEventsLogger.getApplicationId() != pendingRequest.getApplicationId()) {
+        if (appEventsLogger == null || !appEventsLogger.getApplicationId().equals(pendingRequest.getApplicationId())) {
             appEventsLogger = AppEventsLogger.newLogger(context, pendingRequest.getApplicationId());
         }
         return appEventsLogger;
@@ -595,6 +596,9 @@ class AuthorizationClient implements Serializable {
                 parameters.putString(ServerProtocol.DIALOG_PARAM_SCOPE, scope);
                 addLoggingExtra(ServerProtocol.DIALOG_PARAM_SCOPE, scope);
             }
+
+            SessionDefaultAudience audience = request.getDefaultAudience();
+            parameters.putString(ServerProtocol.DIALOG_PARAM_DEFAULT_AUDIENCE, audience.getNativeProtocolAudience());
 
             String previousToken = request.getPreviousAccessToken();
             if (!Utility.isNullOrEmpty(previousToken) && (previousToken.equals(loadCookieToken()))) {
@@ -808,7 +812,7 @@ class AuthorizationClient implements Serializable {
 
             String e2e = getE2E();
             Intent intent = NativeProtocol.createProxyAuthIntent(context, request.getApplicationId(),
-                    request.getPermissions(), e2e, request.isRerequest());
+                    request.getPermissions(), e2e, request.isRerequest(), request.getDefaultAudience());
 
             addLoggingExtra(ServerProtocol.DIALOG_PARAM_E2E, e2e);
 
