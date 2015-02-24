@@ -1,7 +1,7 @@
 Facebook-Unity-Fix - Now Version 6.2.1
 ==================
 
-##Update - 2015/01/19 ##
+##Update - 2015/02/23 ##
 Now updated to version 6.2.1 from 6.1. The 6.2.1, 6.0 and 5.1 packages are still avaiable for people who would prefer being on the older version of the Facebook Unity SDK.
 
 ##Description##
