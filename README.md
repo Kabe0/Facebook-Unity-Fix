@@ -1,8 +1,8 @@
-Facebook-Unity-Fix - Now Version 6.1
+Facebook-Unity-Fix - Now Version 6.2.1
 ==================
 
 ##Update - 2015/01/19 ##
-Now updated to version 6.1 from 6.0. The 6.0 and 5.1 packages are still avaiable for people who would prefer being on the older version of the Facebook Unity SDK.
+Now updated to version 6.2.1 from 6.1. The 6.2.1, 6.0 and 5.1 packages are still avaiable for people who would prefer being on the older version of the Facebook Unity SDK.
 
 ##Description##
 The Facebook SDK makes the assumtion that the keystore file you are going to use is the .android/debug.keystore file when in reality unity uses the keystore the user selects in the *Publish Settings* under android. I have gone through and edited two of the SDK Files in order to provide easy functionality to allow users to quickly get the actual keystore value that facebook uses when published to an Android phone. Now you get a real message that asks you to setup your keystore file in the android publish menu under your build settings, and I have created a refresh button that allows you to check your keystore value in the Facebook Settings GUI.
