@@ -55,7 +55,7 @@ public class FBDialogUtils {
     public static boolean hasUnsupportedParams(DialogType dialogType, Bundle params) {
         switch (dialogType) {
             case SHARE_DIALOG:
-                return params.keySet().retainAll(SUPPORTED_SHARE_DIALOG_PARAMS);
+                return !SUPPORTED_SHARE_DIALOG_PARAMS.containsAll(params.keySet());
             default:
                 Log.e(FB.TAG, "Unrecognized Dialog Type");
                 return false;

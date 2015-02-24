@@ -15,8 +15,8 @@ namespace UnityEditor.FacebookEditor
         public const string ERROR_KEYTOOL_ERROR = "java_keytool_error";
 
 		private static string playerSettingsKeyHash;
-		//private static string debugKeyHash;
-		private static string setupError;
+        //private static string debugKeyHash;
+        private static string setupError;
 
 		// Call to reset the playerSettingsKeyhash as it may change.
 		public static void refresh()
@@ -58,25 +58,22 @@ namespace UnityEditor.FacebookEditor
 					// Using the user defined keystore values instead of the debug one.
 					playerSettingsKeyHash = GetKeyHash( PlayerSettings.Android.keyaliasName, keyStorePath, PlayerSettings.Android.keyaliasPass, PlayerSettings.Android.keystorePass );
 					//debugKeyHash = GetKeyHash("androiddebugkey", DebugKeyStorePath, "android");
-					// D
-					
-				}
-				//return debugKeyHash;
+                }
 				return playerSettingsKeyHash;
             }
         }
 
 		/*
-		private static string DebugKeyStorePath
-		{
-			get
-			{
-				return (Application.platform == RuntimePlatform.WindowsEditor) ? 
-					System.Environment.GetEnvironmentVariable("HOMEPATH") + @"\.android\debug.keystore" : 
-					System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"/.android/debug.keystore";
-			}
-		}*/
-		
+        private static string DebugKeyStorePath
+        {
+            get
+            {
+                return (Application.platform == RuntimePlatform.WindowsEditor) ?
+                    System.Environment.GetEnvironmentVariable("HOMEDRIVE") + System.Environment.GetEnvironmentVariable("HOMEPATH") + @"\.android\debug.keystore" : 
+                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + @"/.android/debug.keystore";
+            }
+        }*/
+
 		private static string keyStorePath
 		{
 			//System.IO.Directory.GetCurrentDirectory() + "/ " 
@@ -142,6 +139,7 @@ namespace UnityEditor.FacebookEditor
 			// keystoreName returns the user specified keystore path as well as the filename.
 			return System.IO.File.Exists( PlayerSettings.Android.keystoreName );
 		}
+
 
         private static bool DoesCommandExist(string command)
         {

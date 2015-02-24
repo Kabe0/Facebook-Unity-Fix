@@ -107,6 +107,7 @@ frictionlessRequests:(bool)_frictionlessRequests
       [self handleSessionChange:session state:state error:error];
     }];
   } else {
+    self.isInitializing = NO;
     UnitySendMessage(g_fbObjName, "OnInitComplete", "");
   }
   return self;
